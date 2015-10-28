@@ -13,7 +13,8 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     CMSCalendar, Upcoming, Scheduling
+  exposed-modules:     Scheduling, Types
+  other-modules:       Utils, CMSCalendar, Upcoming
   build-depends:       base >= 4.7 && < 5
                      , wreq
                      , lens

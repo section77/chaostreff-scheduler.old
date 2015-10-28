@@ -5,17 +5,14 @@
 -- calculates upcoming events
 --------------------------------------------------------------------------------
 module Upcoming (
-    Month
-  , Year
-  , upcomingAt
+    upcomingAt
 ) where
 
-import           Control.Monad
 import           Data.Time
 import           Data.Time.Calendar.WeekDate
+import           Types
 
-type Month = Int
-type Year = Integer
+
 
 -- * exported functions
 
