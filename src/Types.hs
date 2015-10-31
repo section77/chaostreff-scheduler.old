@@ -1,8 +1,9 @@
 module Types where
 
-import           Data.Time           (Day)
-import           Data.Time.Calendar  (toGregorian)
-import           Data.Time.LocalTime (LocalTime, localDay)
+import qualified Data.ByteString.Lazy.Char8 as BL
+import           Data.Time                  (Day)
+import           Data.Time.Calendar         (toGregorian)
+import           Data.Time.LocalTime        (LocalTime, localDay)
 
 type Year = Integer
 type Month = Int
@@ -23,6 +24,17 @@ data Event = Event {
   , calTitle :: String
 } deriving Show
 
+
+
+data CMSError = LoginError String
+              | ParseResponseBodyError BL.ByteString
+              | ExtractAlertError
+              | EventTableNotFoundError
+              | EventTableBodyNotFoundError
+              | EventTableRowsNotFoundError
+              | EventTitleNotFoundError
+              | EventDateParseError String
+              deriving Show
 
 
 class IsIn a where

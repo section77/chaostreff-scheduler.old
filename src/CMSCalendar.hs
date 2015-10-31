@@ -6,9 +6,12 @@
 module CMSCalendar (
     scheduledEventsAt
   , postEvent
+  , CMSResult
 ) where
 
 import           Control.Lens
+import           Control.Monad.Trans.Class  (lift)
+import           Control.Monad.Trans.Except
 import qualified Data.ByteString.Lazy.Char8 as BL
 import           Data.List                  (isInfixOf)
 import           Data.Time.Format           (defaultTimeLocale, formatTime,
@@ -23,7 +26,7 @@ import           Text.XML.Light
 import           Types
 import           Utils
 
-
+type CMSResult a = ExceptT CMSError IO a
 
 tlsTestOk = let opts = defaults & manager .~ Left (mkManagerSettings (TLSSettingsSimple True False False) Nothing)
             in getWith opts "https://cms.section77.de/index.php/login/"
@@ -36,18 +39,20 @@ tlsTestNok = let opts = defaults & manager .~ Left (mkManagerSettings (TLSSettin
 
 -- * exported functions
 
+
 -- | already scheduled events in the cms calendar for a given year and month
-scheduledEventsAt :: LoginData -> Year -> Month -> IO (Either String [Event])
+scheduledEventsAt :: LoginData -> Year -> Month -> CMSResult [Event]
 scheduledEventsAt loginData y m = withCMSSession loginData $ \sess -> do
-                          res <- S.get sess "http://cms.section77.de/index.php/dashboard/event_calendar/list_event/"
-                          return $ parseResponseBody (res ^. responseBody) >>= \e -> fmap (filter $ isInMonth y m) $ extractEvents e
+                          res <- lift $ S.get sess scheduledEventsUrl
+                          body <- return $ parseResponseBody (res ^. responseBody)
+                          liftEither $ body >>= fmap (filter $ isInMonth y m) . extractEvents
 
 
 -- | post a event to the cms calendar
-postEvent :: LoginData -> Event -> IO (Either String String)
+postEvent :: LoginData -> Event -> CMSResult String
 postEvent loginData e = withCMSSession loginData $ \sess -> do
-                          res <- S.post sess "http://cms.section77.de/index.php/dashboard/event_calendar/event/" e
-                          return $ parseResponseBody (res ^. responseBody) >>= maybeToEither "msg not found" . extractAlert
+                          res <- lift $ S.post sess postEventUrl e
+                          liftEither $ parseResponseBody (res ^. responseBody) >>= extractAlert
 
 
 
@@ -55,42 +60,50 @@ postEvent loginData e = withCMSSession loginData $ \sess -> do
 
 -- * private functions
 
+loginUrl = "http://cms.section77.de/index.php/login/do_login/"
+scheduledEventsUrl = "http://cms.section77.de/index.php/dashboard/event_calendar/list_event/"
+postEventUrl = "http://cms.section77.de/index.php/dashboard/event_calendar/event/"
 
 
-withCMSSession :: LoginData -> (S.Session -> IO a) -> IO a
-withCMSSession loginData f = S.withSession $ \sess ->
-        do _ <- S.get sess "http://cms.section77.de/index.php/login/"
-           res <- S.post sess "http://cms.section77.de/index.php/login/do_login/" loginData
-           -- FIXME: change type to include error
-           let Right loginMsg = extractAlert <$> parseResponseBody (res ^. responseBody)
-           _ <- maybe (return ()) print loginMsg
-           f sess
+withCMSSession :: LoginData -> (S.Session -> CMSResult a) -> CMSResult a
+withCMSSession loginData f = withSession $ \sess -> do
+      _ <- lift $ S.get sess loginUrl -- cms required this. it expects a cookie in the login post request!?!?!
+      res <- lift $ S.post sess loginUrl loginData
+      either (const $ f sess) (throwE . LoginError) $ parseResponseBody (res ^. responseBody) >>= extractAlert
+    where -- lift S.withSession in CMSResult
+          withSession :: (S.Session -> CMSResult a) -> CMSResult a
+          withSession f = ExceptT $ S.withSession (runExceptT . f)
+
+
+liftEither :: Either CMSError a -> CMSResult a
+liftEither (Left e) = throwE e
+liftEither (Right a) = (lift . return) a
 
 
 
-parseResponseBody :: BL.ByteString -> Either String Element
-parseResponseBody x = case parseXMLDoc x of
+parseResponseBody :: BL.ByteString -> Either CMSError Element
+parseResponseBody body = case parseXMLDoc body of
   Just xml -> Right xml
-  Nothing  -> Left "parse html resposne error"
+  Nothing  -> Left $ ParseResponseBodyError body
 
 
-extractAlert :: Element -> Maybe String
-extractAlert e = strContent <$> filterElement (hasAttrVal "class" "alert") e
+extractAlert :: Element -> Either CMSError String
+extractAlert e = maybe (Left ExtractAlertError) Right $  strContent <$> filterElement (hasAttrVal "class" "alert") e
 
 -- |
 -- FIXME: one fail -> all fail
-extractEvents :: Element -> Either String [Event]
+extractEvents :: Element -> Either CMSError [Event]
 extractEvents e = do
-  table <- maybeToEither "event table not found" $ filterElement (hasAttrVal "id" "listevent") e
-  tbody <- maybeToEither "event table-body not found" $ filterChildName (isElementOf "tbody") table
-  trs <- maybeToEither "event rows not found" $ Just (filterChildrenName (isElementOf "tr") tbody)
+  table <- maybeToEither EventTableNotFoundError $ filterElement (hasAttrVal "id" "listevent") e
+  tbody <- maybeToEither EventTableBodyNotFoundError $ filterChildName (isElementOf "tbody") table
+  trs <- maybeToEither EventTableRowsNotFoundError  $ Just (filterChildrenName (isElementOf "tr") tbody)
   sequence $ map parseEvent trs
 
 
-parseEvent :: Element -> Either String Event
+parseEvent :: Element -> Either CMSError Event
 parseEvent e = let [title, date, type', desc, url, calTitle, _] = elChildren e
-                   parsedDate = parseTimeM True defaultTimeLocale "%F %T" (strContent date) :: Either String LocalTime
-                in Event <$> (maybeToEither "event title not found" $ strContent <$> filterChildName (isElementOf "input") title)
+                   parsedDate = maybeToEither (EventDateParseError (strContent date)) $ parseTimeM True defaultTimeLocale "%F %T" (strContent date)
+                in Event <$> (maybeToEither EventTitleNotFoundError $ strContent <$> filterChildName (isElementOf "input") title)
                          <*> parsedDate
                          <*> Right (strContent type')
                          <*> Right (strContent desc)

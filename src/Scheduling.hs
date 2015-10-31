@@ -9,25 +9,25 @@ module Scheduling (
 ) where
 
 import           CMSCalendar
-import           Data.Maybe          (fromMaybe, listToMaybe)
+import           Control.Monad.Trans.Class (lift)
+import           Data.Maybe                (fromMaybe, listToMaybe)
 import           Data.Time
-import           Data.Time.LocalTime (utcToLocalTime)
+import           Data.Time.LocalTime       (utcToLocalTime)
 import           Types
 import           Upcoming
 import           Utils
 
-
 -- | schedule chaostreff events for the current year / month
-scheduleEvents :: LoginData -> IO (Either String String)
+scheduleEvents :: LoginData -> CMSResult [String]
 scheduleEvents loginData = do
-  (y, m, _) <- toGregorian . utctDay <$> getCurrentTime
-  fromMaybe (Left "nothing to do") . listToMaybe <$> scheduleEventsAt loginData y m
+  (y, m, _) <- lift $ toGregorian . utctDay <$> getCurrentTime
+  scheduleEventsAt loginData y m
 
 
 -- | schedule chaostreff events for the given year / month
-scheduleEventsAt :: LoginData -> Year -> Month -> IO [Either String String]
+scheduleEventsAt :: LoginData -> Year -> Month -> CMSResult [String]
 scheduleEventsAt loginData y m = do
-  Right scheduled <- scheduledEventsAt loginData y m
+  scheduled <- scheduledEventsAt loginData y m
   let days = diffBy (flip isInDay) scheduled (upcomingAt y m)
   let events = map newEvent days
   mapM (postEvent loginData) events

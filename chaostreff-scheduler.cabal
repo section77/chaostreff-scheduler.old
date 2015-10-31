@@ -23,6 +23,7 @@ library
                      , xml
                      , text
                      , yaml
+                     , transformers
                        -- connection + http-client-tls to disable tls validation
                      , connection
                      , http-client-tls 
@@ -34,6 +35,7 @@ executable chaostreff-scheduler
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , chaostreff-scheduler
+                     , transformers
   default-language:    Haskell2010
 
 test-suite chaostreff-scheduler-test
