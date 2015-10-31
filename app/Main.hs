@@ -12,6 +12,15 @@ main = do
   progName <- getProgName
   args <- getArgs
   case args of
-    [u,p]     -> runExceptT (scheduleEvents $ LoginData u p) >>= print
-    [u,p,y,m] -> runExceptT (scheduleEventsAt (LoginData u p) (read y) (read m)) >>= print
-    _         -> print $ "usage: " ++ progName ++ " <USER> <PASS> [<YEAR> <MONTH>]"
+    [u,p]     -> printResult $ scheduleEvents $ LoginData u p
+    [u,p,y,m] -> printResult $ scheduleEventsAt (LoginData u p) (read y) (read m)
+    _         -> putStrLn $ "usage: " ++ progName ++ " <USER> <PASS> [<YEAR> <MONTH>]"
+
+
+printResult :: AppResult [SchedulingResult] -> IO ()
+printResult r = runExceptT r >>= putStrLn . formatAppRes
+    where formatAppRes (Left e) = "ERROR: " ++ (show e)
+          formatAppRes (Right x) = concat . intersperse "\n" $ map formatSchedRes x
+          formatSchedRes (AlreadyScheduled d) = "already scheduled: " ++ (show d)
+          formatSchedRes (EventScheduled e msg) = "event scheduled at: " ++ (show . date $ e) ++ ", cms msg: \"" ++ msg ++ "\""
+

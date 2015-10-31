@@ -6,7 +6,6 @@
 module CMSCalendar (
     scheduledEventsAt
   , postEvent
-  , CMSResult
 ) where
 
 import           Control.Lens
@@ -26,7 +25,7 @@ import           Text.XML.Light
 import           Types
 import           Utils
 
-type CMSResult a = ExceptT CMSError IO a
+
 
 tlsTestOk = let opts = defaults & manager .~ Left (mkManagerSettings (TLSSettingsSimple True False False) Nothing)
             in getWith opts "https://cms.section77.de/index.php/login/"
@@ -41,7 +40,7 @@ tlsTestNok = let opts = defaults & manager .~ Left (mkManagerSettings (TLSSettin
 
 
 -- | already scheduled events in the cms calendar for a given year and month
-scheduledEventsAt :: LoginData -> Year -> Month -> CMSResult [Event]
+scheduledEventsAt :: LoginData -> Year -> Month -> AppResult [Event]
 scheduledEventsAt loginData y m = withCMSSession loginData $ \sess -> do
                           res <- lift $ S.get sess scheduledEventsUrl
                           body <- return $ parseResponseBody (res ^. responseBody)
@@ -49,7 +48,7 @@ scheduledEventsAt loginData y m = withCMSSession loginData $ \sess -> do
 
 
 -- | post a event to the cms calendar
-postEvent :: LoginData -> Event -> CMSResult String
+postEvent :: LoginData -> Event -> AppResult String
 postEvent loginData e = withCMSSession loginData $ \sess -> do
                           res <- lift $ S.post sess postEventUrl e
                           liftEither $ parseResponseBody (res ^. responseBody) >>= extractAlert
@@ -65,34 +64,34 @@ scheduledEventsUrl = "http://cms.section77.de/index.php/dashboard/event_calendar
 postEventUrl = "http://cms.section77.de/index.php/dashboard/event_calendar/event/"
 
 
-withCMSSession :: LoginData -> (S.Session -> CMSResult a) -> CMSResult a
+withCMSSession :: LoginData -> (S.Session -> AppResult a) -> AppResult a
 withCMSSession loginData f = withSession $ \sess -> do
       _ <- lift $ S.get sess loginUrl -- cms required this. it expects a cookie in the login post request!?!?!
       res <- lift $ S.post sess loginUrl loginData
       either (const $ f sess) (throwE . LoginError) $ parseResponseBody (res ^. responseBody) >>= extractAlert
-    where -- lift S.withSession in CMSResult
-          withSession :: (S.Session -> CMSResult a) -> CMSResult a
+    where -- lift S.withSession in AppResult
+          withSession :: (S.Session -> AppResult a) -> AppResult a
           withSession f = ExceptT $ S.withSession (runExceptT . f)
 
 
-liftEither :: Either CMSError a -> CMSResult a
+liftEither :: Either AppError a -> AppResult a
 liftEither (Left e) = throwE e
 liftEither (Right a) = (lift . return) a
 
 
 
-parseResponseBody :: BL.ByteString -> Either CMSError Element
+parseResponseBody :: BL.ByteString -> Either AppError Element
 parseResponseBody body = case parseXMLDoc body of
   Just xml -> Right xml
   Nothing  -> Left $ ParseResponseBodyError body
 
 
-extractAlert :: Element -> Either CMSError String
+extractAlert :: Element -> Either AppError String
 extractAlert e = maybe (Left ExtractAlertError) Right $  strContent <$> filterElement (hasAttrVal "class" "alert") e
 
 -- |
 -- FIXME: one fail -> all fail
-extractEvents :: Element -> Either CMSError [Event]
+extractEvents :: Element -> Either AppError [Event]
 extractEvents e = do
   table <- maybeToEither EventTableNotFoundError $ filterElement (hasAttrVal "id" "listevent") e
   tbody <- maybeToEither EventTableBodyNotFoundError $ filterChildName (isElementOf "tbody") table
@@ -100,7 +99,7 @@ extractEvents e = do
   sequence $ map parseEvent trs
 
 
-parseEvent :: Element -> Either CMSError Event
+parseEvent :: Element -> Either AppError Event
 parseEvent e = let [title, date, type', desc, url, calTitle, _] = elChildren e
                    parsedDate = maybeToEither (EventDateParseError (strContent date)) $ parseTimeM True defaultTimeLocale "%F %T" (strContent date)
                 in Event <$> (maybeToEither EventTitleNotFoundError $ strContent <$> filterChildName (isElementOf "input") title)

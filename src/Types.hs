@@ -1,5 +1,6 @@
 module Types where
 
+import           Control.Monad.Trans.Except
 import qualified Data.ByteString.Lazy.Char8 as BL
 import           Data.Time                  (Day)
 import           Data.Time.Calendar         (toGregorian)
@@ -25,8 +26,15 @@ data Event = Event {
 } deriving Show
 
 
+type AppResult a = ExceptT AppError IO a
 
-data CMSError = LoginError String
+
+data SchedulingResult = AlreadyScheduled Day
+                      | EventScheduled Event String
+                      deriving Show
+
+
+data AppError = LoginError String
               | ParseResponseBodyError BL.ByteString
               | ExtractAlertError
               | EventTableNotFoundError
