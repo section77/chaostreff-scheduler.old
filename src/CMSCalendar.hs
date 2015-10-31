@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_HADDOCK ignore-exports #-}
 --------------------------------------------------------------------------------
 -- |
 -- interface to the cms calendar
@@ -10,7 +11,7 @@ module CMSCalendar (
 
 import           Control.Lens
 import           Control.Monad.Trans.Class  (lift)
-import           Control.Monad.Trans.Except
+import           Control.Monad.Trans.Except (ExceptT (..), runExceptT, throwE)
 import qualified Data.ByteString.Lazy.Char8 as BL
 import           Data.List                  (isInfixOf)
 import           Data.Time.Format           (defaultTimeLocale, formatTime,
@@ -24,15 +25,6 @@ import           Network.Wreq.Types         (Postable (..))
 import           Text.XML.Light
 import           Types
 import           Utils
-
-
-
-tlsTestOk = let opts = defaults & manager .~ Left (mkManagerSettings (TLSSettingsSimple True False False) Nothing)
-            in getWith opts "https://cms.section77.de/index.php/login/"
-
-tlsTestNok = let opts = defaults & manager .~ Left (mkManagerSettings (TLSSettingsSimple True False False) Nothing)
-             in S.withSession $ \sess -> S.getWith opts sess "https://cms.section77.de/index.php/login/"
-
 
 
 
@@ -63,7 +55,13 @@ loginUrl = "http://cms.section77.de/index.php/login/do_login/"
 scheduledEventsUrl = "http://cms.section77.de/index.php/dashboard/event_calendar/list_event/"
 postEventUrl = "http://cms.section77.de/index.php/dashboard/event_calendar/event/"
 
+opts = defaults & manager .~ Left (mkManagerSettings (TLSSettingsSimple True False False) Nothing)
 
+
+-- | runs the given function in a cms session
+--
+-- * handels user login
+-- * verify the login was successful
 withCMSSession :: LoginData -> (S.Session -> AppResult a) -> AppResult a
 withCMSSession loginData f = withSession $ \sess -> do
       _ <- lift $ S.get sess loginUrl -- cms required this. it expects a cookie in the login post request!?!?!
@@ -74,11 +72,9 @@ withCMSSession loginData f = withSession $ \sess -> do
           withSession f = ExceptT $ S.withSession (runExceptT . f)
 
 
-liftEither :: Either AppError a -> AppResult a
-liftEither (Left e) = throwE e
-liftEither (Right a) = (lift . return) a
 
 
+-- * parse html / extract elements
 
 parseResponseBody :: BL.ByteString -> Either AppError Element
 parseResponseBody body = case parseXMLDoc body of
@@ -124,7 +120,6 @@ instance Postable LoginData where
     postPayload (LoginData u p) = postPayload ["uName" := u, "uPassword" := p]
 
 
-
 instance Postable Event where
     postPayload e = postPayload ["event_title" := title e,
                                  "event_calendarID" := ("3" :: String), -- 3 -> Chaostreff
@@ -132,6 +127,3 @@ instance Postable Event where
                                  "event_type" := type' e,
                                  "event_description" := desc e,
                                  "event_url" := url e]
-
-
-

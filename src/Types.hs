@@ -1,3 +1,8 @@
+{-# OPTIONS_HADDOCK ignore-exports #-}
+--------------------------------------------------------------------------------
+-- |
+-- application types
+--------------------------------------------------------------------------------
 module Types where
 
 import           Control.Monad.Trans.Except
@@ -9,13 +14,14 @@ import           Data.Time.LocalTime        (LocalTime, localDay)
 type Year = Integer
 type Month = Int
 
-
+-- | CMS Login
 data LoginData = LoginData {
     user     :: String
   , password :: String
 } deriving Show
 
 
+-- | Chaostreff event
 data Event = Event {
     title    :: String
   , date     :: LocalTime
@@ -25,15 +31,15 @@ data Event = Event {
   , calTitle :: String
 } deriving Show
 
-
+-- | Result of the application run
 type AppResult a = ExceptT AppError IO a
 
-
+-- | Successful application run result
 data SchedulingResult = AlreadyScheduled Day
                       | EventScheduled Event String
                       deriving Show
 
-
+-- | Error application run result
 data AppError = LoginError String
               | ParseResponseBodyError BL.ByteString
               | ExtractAlertError

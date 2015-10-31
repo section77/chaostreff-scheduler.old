@@ -2,6 +2,8 @@
 --------------------------------------------------------------------------------
 -- |
 -- schedule chaostreff events
+--
+-- this is the entry point for the 'chaostreff-scheduler' library
 --------------------------------------------------------------------------------
 module Scheduling (
     scheduleEvents
@@ -10,12 +12,10 @@ module Scheduling (
 
 import           CMSCalendar
 import           Control.Monad.Trans.Class (lift)
-import           Data.Maybe                (fromMaybe, listToMaybe)
 import           Data.Time
-import           Data.Time.LocalTime       (utcToLocalTime)
 import           Types
 import           Upcoming
-import           Utils
+
 
 
 -- | schedule chaostreff events for the current year / month
@@ -23,6 +23,7 @@ scheduleEvents :: LoginData -> AppResult [SchedulingResult]
 scheduleEvents loginData = do
   (y, m, _) <- lift $ toGregorian . utctDay <$> getCurrentTime
   scheduleEventsAt loginData y m
+
 
 
 -- | schedule chaostreff events for the given year / month
@@ -39,7 +40,7 @@ scheduleEventsAt loginData y m = do
 
 
 
--- FIXME: event template from configuration file
+-- | FIXME: event template from configuration file
 newEvent :: Day -> Event
 newEvent day = let time = TimeOfDay {
                           todHour = 20
