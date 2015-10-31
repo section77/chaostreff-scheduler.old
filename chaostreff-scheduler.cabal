@@ -24,8 +24,9 @@ library
                      , text
                      , yaml
                      , transformers
-                       -- connection + http-client-tls to disable tls validation
+                       -- connection + http-client + http-client-tls to disable tls validation
                      , connection
+                     , http-client
                      , http-client-tls 
   default-language:    Haskell2010
 

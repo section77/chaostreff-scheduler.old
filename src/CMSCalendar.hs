@@ -18,6 +18,7 @@ import           Data.Time.Format           (defaultTimeLocale, formatTime,
                                              parseTimeM)
 import           Data.Time.LocalTime        (LocalTime (..))
 import           Network.Connection         (TLSSettings (..))
+import qualified Network.HTTP.Client        as HTTP
 import           Network.HTTP.Client.TLS    (mkManagerSettings)
 import           Network.Wreq
 import qualified Network.Wreq.Session       as S
@@ -34,7 +35,7 @@ import           Utils
 -- | already scheduled events in the cms calendar for a given year and month
 scheduledEventsAt :: LoginData -> Year -> Month -> AppResult [Event]
 scheduledEventsAt loginData y m = withCMSSession loginData $ \sess -> do
-                          res <- lift $ S.get sess scheduledEventsUrl
+                          res <- lift $ S.getWith opts sess scheduledEventsUrl
                           body <- return $ parseResponseBody (res ^. responseBody)
                           liftEither $ body >>= fmap (filter $ isInMonth y m) . extractEvents
 
@@ -42,7 +43,7 @@ scheduledEventsAt loginData y m = withCMSSession loginData $ \sess -> do
 -- | post a event to the cms calendar
 postEvent :: LoginData -> Event -> AppResult String
 postEvent loginData e = withCMSSession loginData $ \sess -> do
-                          res <- lift $ S.post sess postEventUrl e
+                          res <- lift $ S.postWith opts sess postEventUrl e
                           liftEither $ parseResponseBody (res ^. responseBody) >>= extractAlert
 
 
@@ -51,11 +52,22 @@ postEvent loginData e = withCMSSession loginData $ \sess -> do
 
 -- * private functions
 
-loginUrl = "http://cms.section77.de/index.php/login/do_login/"
-scheduledEventsUrl = "http://cms.section77.de/index.php/dashboard/event_calendar/list_event/"
-postEventUrl = "http://cms.section77.de/index.php/dashboard/event_calendar/event/"
+-- | cms login url
+loginUrl = "https://cms.section77.de/index.php/login/do_login/"
 
-opts = defaults & manager .~ Left (mkManagerSettings (TLSSettingsSimple True False False) Nothing)
+-- | cms scheduled events list url
+scheduledEventsUrl = "https://cms.section77.de/index.php/dashboard/event_calendar/list_event/"
+
+-- | cms post event url
+postEventUrl = "https://cms.section77.de/index.php/dashboard/event_calendar/event/"
+
+-- | HTTP ManagerSettings with certificate validation disabled
+managerSettings :: HTTP.ManagerSettings
+managerSettings = mkManagerSettings (TLSSettingsSimple True False False) Nothing
+
+-- | wreq request options
+opts :: Options
+opts = defaults & manager .~ Left managerSettings
 
 
 -- | runs the given function in a cms session
@@ -64,12 +76,12 @@ opts = defaults & manager .~ Left (mkManagerSettings (TLSSettingsSimple True Fal
 -- * verify the login was successful
 withCMSSession :: LoginData -> (S.Session -> AppResult a) -> AppResult a
 withCMSSession loginData f = withSession $ \sess -> do
-      _ <- lift $ S.get sess loginUrl -- cms required this. it expects a cookie in the login post request!?!?!
-      res <- lift $ S.post sess loginUrl loginData
+      _ <- lift $ S.getWith opts sess loginUrl -- cms required this. it expects a cookie in the login post request!?!?!
+      res <- lift $ S.postWith opts sess loginUrl loginData
       either (const $ f sess) (throwE . LoginError) $ parseResponseBody (res ^. responseBody) >>= extractAlert
     where -- lift S.withSession in AppResult
           withSession :: (S.Session -> AppResult a) -> AppResult a
-          withSession f = ExceptT $ S.withSession (runExceptT . f)
+          withSession f = ExceptT $ S.withSessionControl (Just (HTTP.createCookieJar [])) managerSettings (runExceptT . f)
 
 
 
