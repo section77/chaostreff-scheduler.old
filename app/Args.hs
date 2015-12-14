@@ -1,31 +1,25 @@
 module Args where
 
 import           Options.Applicative
-
+import           Types               (Month, Year)
 
 data AppArgs = ShowVersion
              | ScheduleThisMonth {
-                 user :: String
-               , pass :: String
+                 cfgFile :: FilePath
                }
              | ScheduleMonth {
-                 user  :: String
-               , pass  :: String
-               , year  :: Integer
-               , month :: Int
+                 cfgFile :: FilePath
+               , year    :: Year
+               , month   :: Month
                }
+
 
 
 appArgs :: Parser AppArgs
 appArgs = flag' ShowVersion (short 'v' <> long "version" <> help "chaostreff scheduler version")
-          <|> ScheduleThisMonth
-                  <$> argument str (metavar "<USER>")
-                  <*> argument str (metavar "<PASS>")
           <|> ScheduleMonth
-              <$> argument str (metavar "<USER>")
-              <*> argument str (metavar "<PASS>")
-              <*> argument auto (metavar "<YEAR>")
-              <*> argument auto (metavar "<MONTH>")
-
-
-
+                  <$> argument str (metavar "<CFG>")
+                  <*> argument auto (metavar "<YEAR>")
+                  <*> argument auto (metavar "<MONTH>")
+          <|> ScheduleThisMonth
+                  <$> argument str (metavar "<CFG>")

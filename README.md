@@ -7,18 +7,18 @@ create chaostreff events in the cms calendar
 
   * create events for the current year / month
 
-        chaostreff-scheduler <USER> <PASS>
+        chaostreff-scheduler <CONFIG_FILE> 
 
   * create events for the given year / month
 
-        chaostreff-scheduler <USER> <PASS> <YEAR> <MONTH>
+        chaostreff-scheduler <CONFIG_FILE> <YEAR> <MONTH>
 
 
 ## example
 
 for a month, where one event are already scheduled
 
-        ./chaostreff-scheduler <USER> <PASS> 2015 12
+        ./chaostreff-scheduler <CONFIG_FILE> 2015 12
         already scheduled: 2015-12-09
         event scheduled at: 2015-12-23 20:00:00, cms msg: "Event: Chaostreff has been added"
 
@@ -28,6 +28,24 @@ for a month, where one event are already scheduled
  * install [stack](https://www.stackage.org/) from [here](https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md)
  * stack build
 
+
+
+## config file example
+
+        # event template
+        event-template:
+          title: Chaostreff
+          time: 20:00:00
+          type: Chaostreff im Hackspace
+          desc: Mittwochstreffen des Vereins im Hackspace (wie jeden 2. und 4. Mittwoch des Monats)
+          url: http://osm.org/go/0DLdM4FF2--?way=297085686"
+          calendar-title: Chaostreff
+        
+  
+        # login for cms (to update the calendar)
+        cms-login:
+          user: <USER>
+          pass: <PASS>
 
 
 ## ideas

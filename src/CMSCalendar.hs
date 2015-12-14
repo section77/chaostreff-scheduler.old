@@ -12,6 +12,7 @@ module CMSCalendar (
 import           Control.Lens
 import           Control.Monad.Trans.Class  (lift)
 import           Control.Monad.Trans.Except (ExceptT (..), runExceptT, throwE)
+import           Control.Monad.Trans.Reader
 import qualified Data.ByteString.Lazy.Char8 as BL
 import           Data.List                  (isInfixOf)
 import           Data.Time.Format           (defaultTimeLocale, formatTime,
@@ -33,20 +34,18 @@ import           Utils
 
 
 -- | already scheduled events in the cms calendar for a given year and month
-scheduledEventsAt :: LoginData -> Year -> Month -> AppResult [Event]
-scheduledEventsAt loginData y m = withCMSSession loginData $ \sess -> do
+scheduledEventsAt :: Year -> Month -> App [Event]
+scheduledEventsAt y m = withCMSSession $ \sess -> do
                           res <- lift $ S.getWith opts sess scheduledEventsUrl
                           body <- return $ parseResponseBody (res ^. responseBody)
                           liftEither $ body >>= fmap (filter $ isInMonth y m) . extractEvents
 
 
 -- | post a event to the cms calendar
-postEvent :: LoginData -> Event -> AppResult String
-postEvent loginData e = withCMSSession loginData $ \sess -> do
-                          res <- lift $ S.postWith opts sess postEventUrl e
-                          liftEither $ parseResponseBody (res ^. responseBody) >>= extractAlert
-
-
+postEvent :: Event -> App String
+postEvent e = withCMSSession $ \sess -> do
+                res <- lift $ S.postWith opts sess postEventUrl e
+                liftEither $ parseResponseBody (res ^. responseBody) >>= extractAlert
 
 
 
@@ -74,13 +73,15 @@ opts = defaults & manager .~ Left managerSettings
 --
 -- * handels user login
 -- * verify the login was successful
-withCMSSession :: LoginData -> (S.Session -> AppResult a) -> AppResult a
-withCMSSession loginData f = withSession $ \sess -> do
+withCMSSession :: (S.Session -> ExceptT AppError IO a) -> App a
+withCMSSession f = do
+  ld <- asks loginData
+  lift $ withSession $ \sess -> do
       _ <- lift $ S.getWith opts sess loginUrl -- cms required this. it expects a cookie in the login post request!?!?!
-      res <- lift $ S.postWith opts sess loginUrl loginData
+      res <- lift $ S.postWith opts sess loginUrl ld
       either (const $ f sess) (throwE . LoginError) $ parseResponseBody (res ^. responseBody) >>= extractAlert
-    where -- lift S.withSession in AppResult
-          withSession :: (S.Session -> AppResult a) -> AppResult a
+    where -- lift S.withSession in ExpectT AppError IO a
+          withSession :: (S.Session -> ExceptT AppError IO a) -> ExceptT AppError IO a
           withSession f = ExceptT $ S.withSessionControl (Just (HTTP.createCookieJar [])) managerSettings (runExceptT . f)
 
 
@@ -133,9 +134,9 @@ instance Postable LoginData where
 
 
 instance Postable Event where
-    postPayload e = postPayload ["event_title" := title e,
+    postPayload e = postPayload ["event_title" := eTitle e,
                                  "event_calendarID" := ("3" :: String), -- 3 -> Chaostreff
-                                 "event_date" := formatTime defaultTimeLocale "%F+%T" (date e),
-                                 "event_type" := type' e,
-                                 "event_description" := desc e,
-                                 "event_url" := url e]
+                                 "event_date" := formatTime defaultTimeLocale "%F+%T" (eDate e),
+                                 "event_type" := eType e,
+                                 "event_description" := eDesc e,
+                                 "event_url" := eUrl e]

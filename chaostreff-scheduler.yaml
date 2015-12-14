@@ -1,0 +1,20 @@
+#
+# chaostreff-scheduler configuration
+# 
+
+
+# event template
+event-template:
+  title: Chaostreff
+  time: 20:00:00
+  type: Chaostreff im Hackspace
+  desc: Mittwochstreffen des Vereins im Hackspace (wie jeden 2. und 4. Mittwoch des Monats)
+  url: http://osm.org/go/0DLdM4FF2--?way=297085686"
+  calendar-title: Chaostreff
+
+  
+
+# login for cms (to update the calendar)  
+cms-login:
+  user: <USER>
+  pass: <PASS>

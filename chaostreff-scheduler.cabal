@@ -38,6 +38,7 @@ executable chaostreff-scheduler
                      , chaostreff-scheduler
                      , transformers
                      , optparse-applicative
+                     , yaml
   default-language:    Haskell2010
 
 test-suite chaostreff-scheduler-test

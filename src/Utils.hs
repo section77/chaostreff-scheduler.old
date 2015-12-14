@@ -6,7 +6,7 @@
 module Utils where
 
 import           Control.Monad.Trans.Class  (lift)
-import           Control.Monad.Trans.Except (throwE)
+import           Control.Monad.Trans.Except (ExceptT (..), throwE)
 import           Types
 
 -- |
@@ -22,9 +22,9 @@ maybeToEither _ (Just b) = Right b
 
 
 
--- | lift an (Either AppError a) into (AppResult a)
+-- | lift an (Either AppError a) into (App a)
 --
-liftEither :: Either AppError a -> AppResult a
+liftEither :: Either AppError a -> ExceptT AppError IO a
 liftEither (Left e) = throwE e
-liftEither (Right a) = (lift . return) a
+liftEither (Right a) = lift $ return a
 
