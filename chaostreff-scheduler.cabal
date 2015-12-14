@@ -37,6 +37,7 @@ executable chaostreff-scheduler
   build-depends:       base
                      , chaostreff-scheduler
                      , transformers
+                     , optparse-applicative
   default-language:    Haskell2010
 
 test-suite chaostreff-scheduler-test

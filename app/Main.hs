@@ -1,20 +1,26 @@
 module Main where
 
+import           Args
 import           Control.Monad.Trans.Class  (lift)
 import           Control.Monad.Trans.Except (runExceptT)
 import           Data.List                  (concat, intersperse)
+import           Options.Applicative        (execParser, fullDesc, header,
+                                             helper, info, progDesc, (<>))
 import           Scheduling
-import           System.Environment         (getArgs, getProgName)
 import           Types
 
+
 main :: IO ()
-main = do
-  progName <- getProgName
-  args <- getArgs
-  case args of
-    [u,p]     -> printResult $ scheduleEvents $ LoginData u p
-    [u,p,y,m] -> printResult $ scheduleEventsAt (LoginData u p) (read y) (read m)
-    _         -> putStrLn $ "usage: " ++ progName ++ " <USER> <PASS> [<YEAR> <MONTH>]"
+main = execParser opts >>= run
+    where opts = info (helper <*> appArgs)
+                 ( fullDesc
+                 <> progDesc "schedule chaostreff events"
+                 <> header "chaostreff scheduler")
+
+
+run :: AppArgs -> IO ()
+run (ScheduleThisMonth u p) = printResult $ scheduleEvents $ LoginData u p
+run (ScheduleMonth u p y m) = printResult $ scheduleEventsAt (LoginData u p) y m
 
 
 printResult :: AppResult [SchedulingResult] -> IO ()
