@@ -3,7 +3,8 @@ module Args where
 import           Options.Applicative
 
 
-data AppArgs = ScheduleThisMonth {
+data AppArgs = ShowVersion
+             | ScheduleThisMonth {
                  user :: String
                , pass :: String
                }
@@ -16,7 +17,8 @@ data AppArgs = ScheduleThisMonth {
 
 
 appArgs :: Parser AppArgs
-appArgs = ScheduleThisMonth
+appArgs = flag' ShowVersion (short 'v' <> long "version" <> help "chaostreff scheduler version")
+          <|> ScheduleThisMonth
                   <$> argument str (metavar "<USER>")
                   <*> argument str (metavar "<PASS>")
           <|> ScheduleMonth
@@ -24,3 +26,6 @@ appArgs = ScheduleThisMonth
               <*> argument str (metavar "<PASS>")
               <*> argument auto (metavar "<YEAR>")
               <*> argument auto (metavar "<MONTH>")
+
+
+

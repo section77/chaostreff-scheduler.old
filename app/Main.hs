@@ -4,8 +4,10 @@ import           Args
 import           Control.Monad.Trans.Class  (lift)
 import           Control.Monad.Trans.Except (runExceptT)
 import           Data.List                  (concat, intersperse)
+import           Data.Version               (showVersion)
 import           Options.Applicative        (execParser, fullDesc, header,
                                              helper, info, progDesc, (<>))
+import           Paths_chaostreff_scheduler (version)
 import           Scheduling
 import           Types
 
@@ -19,6 +21,7 @@ main = execParser opts >>= run
 
 
 run :: AppArgs -> IO ()
+run ShowVersion = putStrLn $ showVersion version
 run (ScheduleThisMonth u p) = printResult $ scheduleEvents $ LoginData u p
 run (ScheduleMonth u p y m) = printResult $ scheduleEventsAt (LoginData u p) y m
 
