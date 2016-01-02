@@ -7,22 +7,21 @@ import           Control.Monad.Trans.Reader (runReaderT)
 import           Data.List                  (concat, intersperse)
 import           Data.Version               (showVersion)
 import           Data.Yaml
-import           Options.Applicative        (execParser, fullDesc, header,
-                                             helper, info, progDesc, (<>))
 import           Paths_chaostreff_scheduler (version)
 import           Scheduling
+import           System.Environment         (getArgs)
+import           Text.Parsec                (ParseError)
 import           Types
 
 
 main :: IO ()
-main = execParser opts >>= run
-    where opts = info (helper <*> appArgs)
-                 ( fullDesc
-                 <> progDesc "call it with the config file, to schedule the actual month, call it with the config file and a year and month to schedule for the given year and month"
-                 <> header "chaostreff-scheduler - schedule chaostreff events")
+main = do
+  args <- parseArgs . unwords <$> getArgs
+  either handleInvalidArgs run args
 
 
 run :: AppArgs -> IO ()
+run ShowHelp = printUsage
 run ShowVersion = putStrLn $ showVersion version
 run (ScheduleThisMonth cfgFile) = printResult $ runApp scheduleEvents cfgFile
 run (ScheduleMonth cfgFile y m) = printResult $ runApp (scheduleEventsAt y m) cfgFile
@@ -42,3 +41,29 @@ printResult r = runExceptT r >>= putStrLn . formatAppRes
           formatSchedRes (AlreadyScheduled d) = "already scheduled: " ++ (show d)
           formatSchedRes (EventScheduled e msg) = "event scheduled at: " ++ (show . eDate $ e) ++ ", cms msg: \"" ++ msg ++ "\""
 
+
+
+printUsage :: IO ()
+printUsage = putStrLn $ unlines [
+               "chaostreff-scheduler - schedule chaostreff events"
+             , ""
+             , "usage:"
+             , "  chaostreff-scheduler <CFG> [<YEAR> <MONTH>]"
+             , ""
+             , "examples:"
+             , " chaostreff-scheduler chaostreff-scheduler.yaml"
+             , "   -> schedule for the actual year and month"
+             , " chaostreff-scheduler chaostreff-scheduler.yaml 2016 01"
+             , "   -> schedule for january 2016"
+             , ""
+             , "other flags:"
+             , " -v: print version"
+             , " -h: show this help"
+             ]
+
+
+handleInvalidArgs :: ParseError -> IO ()
+handleInvalidArgs e = do
+  putStrLn $ show e
+  putStrLn ""
+  printUsage
