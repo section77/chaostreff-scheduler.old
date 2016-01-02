@@ -8,11 +8,11 @@ import           Data.List                  (concat, intersperse)
 import           Data.Version               (showVersion)
 import           Data.Yaml
 import           Paths_chaostreff_scheduler (version)
+import           Reminder
 import           Scheduling
 import           System.Environment         (getArgs)
 import           Text.Parsec                (ParseError)
 import           Types
-
 
 main :: IO ()
 main = do
@@ -28,9 +28,10 @@ run (ScheduleMonth cfgFile y m) = printResult $ runApp (scheduleEventsAt y m) cf
 
 
 runApp :: App [SchedulingResult] -> FilePath -> ExceptT AppError IO [SchedulingResult]
-runApp app cfgFile = do
+runApp schedule cfgFile = do
   errOrCfg <- lift $ decodeFileEither cfgFile
-  either (throwE . InvalidConfig . show) (runReaderT app) errOrCfg
+  either (throwE . InvalidConfig . show) (runReaderT (schedule `andThen` sendReminders)) errOrCfg
+    where andThen = flip (>>) :: App b -> App a -> App b
 
 
 printResult :: ExceptT AppError IO [SchedulingResult] -> IO ()

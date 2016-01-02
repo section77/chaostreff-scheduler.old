@@ -16,5 +16,44 @@ event-template:
 
 # login for cms (to update the calendar)  
 cms-login:
-  user: <USER>
-  pass: <PASS>
+  user: <CMS_USER>
+  pass: <CMS_PASS>
+
+
+# 
+reminder-mail:
+  enabled: false
+  days-ahead: 2
+  host: <MAIL_HOST>
+  login-user: <MAIL_USER>
+  login-pass: <MAIL_PASS>
+  sender: chaostreff-event@section77.de
+  receiver: section77@j-keck.net
+  subject: Uebermorgen ist uebrigens wieder ein Treffen im Hackspace!
+
+  # 
+  # supported holes in the body:
+  #   $receiver$  : the receiver mail address
+  #   $title$     : event title
+  #   $type$      : event type
+  #   $desc$      : event description
+  #   $url$       : event url
+  #   $cal-title$ : event calendar title
+  #   $year$      : event date - year part
+  #   $month$     : event date - month part
+  #   $day$       : event date - day part
+  #   $hour$      : event date - hour part
+  #   $minute$    : event date - minute part
+  #   $second$    : event date - second part
+  #
+  body: |
+    Titel: $title$
+    Datum: $day$.$month$.$year$ um $hour$.$minute$
+
+
+    Du weisst schon, ob du kommst?
+      ja: https://section77.de/meeting/$year$$month$$day$/$receiver$/ja
+      nein: https://section77.de/meeting/$year$$month$$day$/$receiver$/nein
+      wer kommt bisher: https://section77.de/meeting/$year$$month$$day$/liste
+
+

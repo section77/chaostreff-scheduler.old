@@ -1,4 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE OverloadedStrings  #-}
 {-# OPTIONS_HADDOCK ignore-exports #-}
 -------------------------------------------------------------------------------
 -- |
@@ -10,11 +11,13 @@ import           Control.Monad              (mzero)
 import           Control.Monad.Trans.Except
 import           Control.Monad.Trans.Reader
 import qualified Data.ByteString.Lazy.Char8 as BL
+import           Data.Data
 import           Data.Time                  (Day, TimeOfDay)
 import           Data.Time.Calendar         (toGregorian)
 import           Data.Time.Format           (defaultTimeLocale,
                                              parseTimeOrError)
 import           Data.Time.LocalTime        (LocalTime, localDay)
+import           Data.Typeable
 import           Data.Yaml
 
 type Year = Integer
@@ -54,15 +57,46 @@ instance FromJSON EventTemplate where
 
     parseJSON _ = mzero
 
-data Config = Config {
-      loginData     :: LoginData
-    , eventTemplate :: EventTemplate
+data ReminderMailConfig = ReminderMailConfig {
+      rmcEnabled   :: Bool
+    , rmcDaysAhead :: Int
+    , rmcHost      :: String
+    , rmcUser      :: String
+    , rmcPass      :: String
+    , rmcSender    :: String
+    , rmcReceiver  :: String
+    , rmcSubject   :: String
+    , rmcBody      :: String
     } deriving (Show)
+
+
+instance FromJSON ReminderMailConfig where
+    parseJSON (Object v) = ReminderMailConfig <$>
+                           v .: "enabled" <*>
+                           v .: "days-ahead" <*>
+                           v .: "host" <*>
+                           v .: "login-user" <*>
+                           v .: "login-pass" <*>
+                           v .: "sender" <*>
+                           v .: "receiver" <*>
+                           v .: "subject" <*>
+                           v .: "body"
+
+    parseJSON _ = mzero
+
+
+data Config = Config {
+      loginData          :: LoginData
+    , eventTemplate      :: EventTemplate
+    , reminderMailConfig :: ReminderMailConfig
+    } deriving (Show)
+
 
 instance FromJSON Config where
     parseJSON (Object v) = Config <$>
                            v .: "cms-login" <*>
-                           v .: "event-template"
+                           v .: "event-template" <*>
+                           v .: "reminder-mail"
 
 
 -- | Chaostreff event
@@ -73,7 +107,7 @@ data Event = Event {
   , eDesc     :: String
   , eUrl      :: String
   , eCalTitle :: String
-} deriving Show
+} deriving (Show, Data, Typeable)
 
 
 type App a = ReaderT Config (ExceptT AppError IO) a
@@ -93,6 +127,7 @@ data AppError = LoginError String
               | EventTitleNotFoundError
               | EventDateParseError String
               | InvalidConfig String
+              | SendReminderError IOError
               deriving Show
 
 

@@ -27,4 +27,3 @@ maybeToEither _ (Just b) = Right b
 liftEither :: Either AppError a -> ExceptT AppError IO a
 liftEither (Left e) = throwE e
 liftEither (Right a) = lift $ return a
-
