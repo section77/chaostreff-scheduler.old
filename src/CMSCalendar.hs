@@ -5,7 +5,8 @@
 -- interface to the cms calendar
 --------------------------------------------------------------------------------
 module CMSCalendar (
-    scheduledEventsAt
+    scheduledEvents
+  , scheduledEventsAt
   , postEvent
 ) where
 
@@ -33,12 +34,18 @@ import           Utils
 -- * exported functions
 
 
+
+-- | already scheduled events in the cms calendar
+scheduledEvents :: App [Event]
+scheduledEvents = withCMSSession $ \sess -> do
+                    res <- lift $ S.getWith opts sess scheduledEventsUrl
+                    body <- return $ parseResponseBody (res ^. responseBody)
+                    liftEither $ body >>= extractEvents
+
+
 -- | already scheduled events in the cms calendar for a given year and month
 scheduledEventsAt :: Year -> Month -> App [Event]
-scheduledEventsAt y m = withCMSSession $ \sess -> do
-                          res <- lift $ S.getWith opts sess scheduledEventsUrl
-                          body <- return $ parseResponseBody (res ^. responseBody)
-                          liftEither $ body >>= fmap (filter $ isInMonth y m) . extractEvents
+scheduledEventsAt y m = fmap (filter $ isInMonth y m) scheduledEvents
 
 
 -- | post a event to the cms calendar

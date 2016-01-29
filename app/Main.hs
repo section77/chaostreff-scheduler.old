@@ -23,7 +23,7 @@ main = do
 run :: AppArgs -> IO ()
 run ShowHelp = printUsage
 run ShowVersion = putStrLn $ showVersion version
-run (ScheduleThisMonth cfgFile) = printResult $ runApp scheduleEvents cfgFile
+run (ScheduleNextMonths cfgFile n) = printResult $ runApp (scheduleNextEvents n) cfgFile
 run (ScheduleMonth cfgFile y m) = printResult $ runApp (scheduleEventsAt y m) cfgFile
 
 
@@ -48,11 +48,15 @@ printUsage = putStrLn $ unlines [
                "chaostreff-scheduler - schedule chaostreff events"
              , ""
              , "usage:"
-             , "  chaostreff-scheduler <CFG> [<YEAR> <MONTH>]"
+             , "  chaostreff-scheduler <CFG> [<YEAR> <MONTH> | <COUNT>]"
              , ""
              , "examples:"
              , " chaostreff-scheduler chaostreff-scheduler.yaml"
              , "   -> schedule for the actual year and month"
+             , ""
+             , " chaostreff-scheduler chaostreff-scheduler.yaml 2"
+             , "   -> schedule for the actual and next month"
+             , ""
              , " chaostreff-scheduler chaostreff-scheduler.yaml 2016 01"
              , "   -> schedule for january 2016"
              , ""

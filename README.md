@@ -9,6 +9,10 @@ create chaostreff events in the cms calendar
 
         chaostreff-scheduler <CONFIG_FILE> 
 
+  * create events for the current and next (COUNT -1) months
+
+        chaostreff-scheduler <CONFIG_FILE> <COUNT>
+
   * create events for the given year / month
 
         chaostreff-scheduler <CONFIG_FILE> <YEAR> <MONTH>
@@ -16,11 +20,22 @@ create chaostreff events in the cms calendar
 
 ## example
 
-for a month, where one event are already scheduled
+* schedule a given year / month
 
-        ./chaostreff-scheduler <CONFIG_FILE> 2015 12
-        already scheduled: 2015-12-09
-        event scheduled at: 2015-12-23 20:00:00, cms msg: "Event: Chaostreff has been added"
+        ./chaostreff-scheduler  chaostreff-scheduler.yaml-local 2016 01
+        event scheduled at: 2016-02-13 20:00:00, cms msg: "Event: Chaostreff has been added"
+        event scheduled at: 2016-02-27 20:00:00, cms msg: "Event: Chaostreff has been added"
+
+
+* schedule the current and next month
+  (result from a run at january 2016 where three events was already scheduled)
+
+        ./chaostreff-scheduler <CONFIG_FILE> 2
+        already scheduled: 2016-01-13
+        already scheduled: 2016-01-27
+        already scheduled: 2016-02-10
+        event scheduled at: 2016-02-24 20:00:00, cms msg: "Event: Chaostreff has been added"
+
 
   
 ## build
@@ -50,10 +65,9 @@ for a month, where one event are already scheduled
 
 ## ideas
 
- * send notification mail two days before the event
  * send event notification per twitter?
  * add doodels?
- * send notifcation mail to every user with personalized links
+ * send notifcation mail to every user with personalized links (**wip in the dev branch**)
    (-> only one click to show user intention)
      - i'm going: http://xxx/<user-name>/go
      - maybe: http://xxx/<user-name>/maybe 

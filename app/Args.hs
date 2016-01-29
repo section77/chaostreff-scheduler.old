@@ -12,8 +12,9 @@ import           Types                (Month, Year)
 
 data AppArgs = ShowHelp
              | ShowVersion
-             | ScheduleThisMonth {
-                 cfgFile :: FilePath
+             | ScheduleNextMonths {
+                cfgFile :: FilePath
+              , n       :: Int
                }
              | ScheduleMonth {
                  cfgFile :: FilePath
@@ -26,8 +27,9 @@ parseArgs :: String -> Either ParseError AppArgs
 parseArgs = parse p "parse args"
     where p = try parseHelp
               <|> try parseVersion
-              <|> try parseScheduleThisMonth
               <|> try parseScheduleMonth
+              <|> try parseScheduleNextMonths
+
 
 parseHelp :: Parser AppArgs
 parseHelp = do
@@ -41,10 +43,11 @@ parseVersion = do
   return ShowVersion
 
 
-parseScheduleThisMonth :: Parser AppArgs
-parseScheduleThisMonth = do
-  cfgFile <- word <* eof
-  return $ ScheduleThisMonth cfgFile
+parseScheduleNextMonths :: Parser AppArgs
+parseScheduleNextMonths = do
+  cfgFile <- word
+  n <- fromIntegral <$> integer <|> (pure 1) <* eof
+  return $ ScheduleNextMonths cfgFile n
 
 
 parseScheduleMonth :: Parser AppArgs
