@@ -18,7 +18,7 @@ import qualified Data.ByteString.Lazy.Char8 as BL
 import           Data.List                  (isInfixOf)
 import           Data.Time.Format           (defaultTimeLocale, formatTime,
                                              parseTimeM)
-import           Data.Time.LocalTime        (LocalTime (..))
+import           Data.Time.LocalTime
 import           Network.Connection         (TLSSettings (..))
 import qualified Network.HTTP.Client        as HTTP
 import           Network.HTTP.Client.TLS    (mkManagerSettings)

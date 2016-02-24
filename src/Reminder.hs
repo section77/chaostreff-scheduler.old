@@ -40,7 +40,7 @@ sendReminders = do
 sendRemindersForEvent :: Event -> App ()
 sendRemindersForEvent e = do
   rs <- asks $ rmcReceiver . reminderMailConfig
-  mapM (sendReminderForEvent e) [rs]
+  mapM (sendReminderForEvent e) rs
   return ()
 
 

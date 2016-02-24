@@ -57,6 +57,5 @@ parseScheduleMonth = do
 
 -- parsec
 lexer = P.makeTokenParser emptyDef
-symbol = P.symbol lexer
 integer = P.integer lexer
 word = many1 $ noneOf " "

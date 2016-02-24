@@ -28,7 +28,8 @@ reminder-mail:
   login-user: <MAIL_USER>
   login-pass: <MAIL_PASS>
   sender: chaostreff-event@section77.de
-  receiver: section77@j-keck.net
+  receiver: 
+    - section77@j-keck.net
   subject: Uebermorgen ist uebrigens wieder ein Treffen im Hackspace!
 
   # 

@@ -17,7 +17,6 @@ import           Data.Time.Calendar         (toGregorian)
 import           Data.Time.Format           (defaultTimeLocale,
                                              parseTimeOrError)
 import           Data.Time.LocalTime        (LocalTime, localDay)
-import           Data.Typeable
 import           Data.Yaml
 
 type Year = Integer
@@ -64,7 +63,7 @@ data ReminderMailConfig = ReminderMailConfig {
     , rmcUser      :: String
     , rmcPass      :: String
     , rmcSender    :: String
-    , rmcReceiver  :: String
+    , rmcReceiver  :: [String]
     , rmcSubject   :: String
     , rmcBody      :: String
     } deriving (Show)
@@ -98,6 +97,7 @@ instance FromJSON Config where
                            v .: "event-template" <*>
                            v .: "reminder-mail"
 
+    parseJSON _ = mzero
 
 -- | Chaostreff event
 data Event = Event {

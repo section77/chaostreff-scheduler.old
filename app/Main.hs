@@ -4,7 +4,7 @@ import           Args
 import           Control.Monad.Trans.Class  (lift)
 import           Control.Monad.Trans.Except (ExceptT (..), runExceptT, throwE)
 import           Control.Monad.Trans.Reader (runReaderT)
-import           Data.List                  (concat, intersperse)
+import           Data.List                  (intersperse)
 import           Data.Version               (showVersion)
 import           Data.Yaml
 import           Paths_chaostreff_scheduler (version)
@@ -30,7 +30,7 @@ run (ScheduleMonth cfgFile y m) = printResult $ runApp (scheduleEventsAt y m) cf
 runApp :: App [SchedulingResult] -> FilePath -> ExceptT AppError IO [SchedulingResult]
 runApp schedule cfgFile = do
   errOrCfg <- lift $ decodeFileEither cfgFile
-  either (throwE . InvalidConfig . show) (runReaderT (schedule `andThen` sendReminders)) errOrCfg
+  either (throwE . InvalidConfig . prettyPrintParseException) (runReaderT (schedule `andThen` sendReminders)) errOrCfg
     where andThen = flip (>>) :: App b -> App a -> App b
 
 
