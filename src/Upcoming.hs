@@ -23,9 +23,9 @@ import           Unsafe
 -- >>> upcomingAt 2016 01
 -- [2016-01-13,2016-01-27]
 upcomingAt :: Year -> Month -> [Day]
-upcomingAt y m = oddElements wednesdays
+upcomingAt y m = oddElements tuesdays
     where oddElements = map snd . filter (even . fst) . zip [1..]
-          wednesdays = filter isWednesday $ allDaysAt y m
+          tuesdays = filter isTuesday $ allDaysAt y m
 
 
 
@@ -59,18 +59,18 @@ daysInMonth n
 
 
 
--- | evaluates to True if the given day is a wednesday
+-- | evaluates to True if the given day is a tuesday
 --
 -- >>> -- the 01.01.2016 is a friday
--- >>> isWednesday $ fromGregorian 2016 01 01
+-- >>> isTuesday $ fromGregorian 2016 01 01
 -- False
 --
--- >>> -- the 06.01.2016 is a wednesday
--- >>> isWednesday $ fromGregorian 2016 01 06
+-- >>> -- the 05.01.2016 is a wednesday
+-- >>> isTuesday $ fromGregorian 2016 01 05
 -- True
 --
-isWednesday :: Day -> Bool
-isWednesday = (==) 3 . dayOfWeek
+isTuesday :: Day -> Bool
+isTuesday = (==) 2 . dayOfWeek
 
 
 

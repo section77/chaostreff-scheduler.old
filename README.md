@@ -1,13 +1,13 @@
-# [PROTOTYPE] chaostreff scheduler
+# chaostreff scheduler
 
-create chaostreff events in the cms calendar
+schedule chaostreff events in the cms calendar
 
 
 ## usage
 
   * create events for the current year / month
 
-        chaostreff-scheduler <CONFIG_FILE> 
+        chaostreff-scheduler <CONFIG_FILE>
 
   * create events for the current and next (COUNT -1) months
 
@@ -37,7 +37,6 @@ create chaostreff events in the cms calendar
         event scheduled at: 2016-02-24 20:00:00, cms msg: "Event: Chaostreff has been added"
 
 
-  
 ## build
 
  * install [stack](https://www.stackage.org/) from [here](https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md)
@@ -52,11 +51,10 @@ create chaostreff events in the cms calendar
           title: Chaostreff
           time: 20:00:00
           type: Chaostreff im Hackspace
-          desc: Mittwochstreffen des Vereins im Hackspace (wie jeden 2. und 4. Mittwoch des Monats)
-          url: http://osm.org/go/0DLdM4FF2--?way=297085686"
+          desc: Dienstagstreffen des Vereins im Hackspace (wie jeden 2. und 4. Dienstags des Monats)
+          url: http://osm.org/go/0DLdIKvND?way=286246667
           calendar-title: Chaostreff
-        
-  
+
         # login for cms (to update the calendar)
         cms-login:
           user: <USER>
@@ -70,7 +68,6 @@ create chaostreff events in the cms calendar
  * send notifcation mail to every user with personalized links (**wip in the dev branch**)
    (-> only one click to show user intention)
      - i'm going: http://xxx/<user-name>/go
-     - maybe: http://xxx/<user-name>/maybe 
+     - maybe: http://xxx/<user-name>/maybe
      - sorry, i'm busy: http://xxx/<user-name>/no
      - who's going: http://xxx/list
-   
