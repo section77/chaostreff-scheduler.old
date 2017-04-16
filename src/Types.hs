@@ -16,14 +16,15 @@ import           Data.Time.Format           (defaultTimeLocale,
                                              parseTimeOrError)
 import           Data.Time.LocalTime        (LocalTime, localDay)
 import           Data.Yaml
+import           Protolude
 
 type Year = Integer
 type Month = Int
 
 -- | CMS Login
 data LoginData = LoginData {
-    ldUser     :: String
-  , ldPassword :: String
+    ldUser     :: [Char]
+  , ldPassword :: [Char]
 } deriving (Show)
 
 instance FromJSON LoginData where
@@ -34,12 +35,12 @@ instance FromJSON LoginData where
     parseJSON _ = mzero
 
 data EventTemplate = EventTemplate {
-      etTitle    :: String
+      etTitle    :: [Char]
     , etTime     :: TimeOfDay
-    , etType     :: String
-    , etDesc     :: String
-    , etUrl      :: String
-    , etCalTitle :: String
+    , etType     :: [Char]
+    , etDesc     :: [Char]
+    , etUrl      :: [Char]
+    , etCalTitle :: [Char]
                   } deriving (Show)
 
 instance FromJSON EventTemplate where
@@ -50,7 +51,7 @@ instance FromJSON EventTemplate where
                            v .: "desc" <*>
                            v .: "url" <*>
                            v .: "calendar-title"
-        where parseTime = parseTimeOrError True defaultTimeLocale "%T" :: String -> TimeOfDay
+        where parseTime = parseTimeOrError True defaultTimeLocale "%T" :: [Char] -> TimeOfDay
 
     parseJSON _ = mzero
 
@@ -67,12 +68,12 @@ instance FromJSON Config where
 
 -- | Chaostreff event
 data Event = Event {
-    eTitle    :: String
+    eTitle    :: [Char]
   , eDate     :: LocalTime
-  , eType     :: String
-  , eDesc     :: String
-  , eUrl      :: String
-  , eCalTitle :: String
+  , eType     :: [Char]
+  , eDesc     :: [Char]
+  , eUrl      :: [Char]
+  , eCalTitle :: [Char]
 } deriving Show
 
 
@@ -80,19 +81,19 @@ type App a = ReaderT Config (ExceptT AppError IO) a
 
 -- | Successful application run result
 data SchedulingResult = AlreadyScheduled Day
-                      | EventScheduled Event String
+                      | EventScheduled Event [Char]
                       deriving Show
 
 -- | Error application run result
-data AppError = LoginError String
-              | ParseResponseBodyError BL.ByteString
+data AppError = LoginError [Char]
+              | ParseResponseBodyError LByteString
               | ExtractAlertError
               | EventTableNotFoundError
               | EventTableBodyNotFoundError
               | EventTableRowsNotFoundError
               | EventTitleNotFoundError
-              | EventDateParseError String
-              | InvalidConfig String
+              | EventDateParseError [Char]
+              | InvalidConfig [Char]
               deriving Show
 
 

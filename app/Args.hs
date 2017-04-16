@@ -4,6 +4,7 @@ module Args
     , AppArgs (..)
     ) where
 
+import           Protolude            hiding (try, (<|>))
 import           Text.Parsec
 import           Text.Parsec.Language (emptyDef)
 import           Text.Parsec.String   (Parser)
@@ -13,8 +14,8 @@ import           Types                (Month, Year)
 data AppArgs = ShowHelp
              | ShowVersion
              | ScheduleNextMonths {
-                cfgFile :: FilePath
-              , n       :: Int
+                cfgFile        :: FilePath
+              , numberOfMonths :: Int
                }
              | ScheduleMonth {
                  cfgFile :: FilePath
@@ -23,7 +24,7 @@ data AppArgs = ShowHelp
                } deriving Show
 
 
-parseArgs :: String -> Either ParseError AppArgs
+parseArgs :: [Char] -> Either ParseError AppArgs
 parseArgs = parse p "parse args"
     where p = try parseHelp
               <|> try parseVersion
@@ -45,21 +46,25 @@ parseVersion = do
 
 parseScheduleNextMonths :: Parser AppArgs
 parseScheduleNextMonths = do
-  cfgFile <- word
+  cfg <- word
   n <- fromIntegral <$> integer <|> (pure 1) <* eof
-  return $ ScheduleNextMonths cfgFile n
+  return $ ScheduleNextMonths cfg n
 
 
 parseScheduleMonth :: Parser AppArgs
 parseScheduleMonth = do
-  cfgFile <- word
-  year <- integer
-  month <- fromIntegral <$> integer <* eof
-  return $ ScheduleMonth cfgFile year month
+  cfg <- word
+  y <- integer
+  m <- fromIntegral <$> integer <* eof
+  return $ ScheduleMonth cfg y m
 
 
 -- parsec
+lexer :: P.GenTokenParser [Char] u Identity
 lexer = P.makeTokenParser emptyDef
-symbol = P.symbol lexer
+
+integer :: ParsecT [Char] u Identity Integer
 integer = P.integer lexer
+
+word :: ParsecT [Char] u Identity [Char]
 word = many1 $ noneOf " "

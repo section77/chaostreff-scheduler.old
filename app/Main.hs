@@ -1,36 +1,32 @@
 module Main where
 
 import           Args
-import           Control.Monad.Trans.Class  (lift)
-import           Control.Monad.Trans.Except (ExceptT (..), runExceptT, throwE)
-import           Control.Monad.Trans.Reader (runReaderT)
-import           Data.List                  (concat, intersperse)
 import           Data.Version               (showVersion)
 import           Data.Yaml
 import           Paths_chaostreff_scheduler (version)
+import           Protolude                  hiding (msg)
 import           Scheduling
-import           System.Environment         (getArgs)
 import           Text.Parsec                (ParseError)
 import           Types
 
 
 main :: IO ()
 main = do
-  args <- parseArgs . unwords <$> getArgs
+  args <- parseArgs . (intercalate " ") <$> getArgs
   either handleInvalidArgs run args
 
 
 run :: AppArgs -> IO ()
 run ShowHelp = printUsage
 run ShowVersion = putStrLn $ showVersion version
-run (ScheduleNextMonths cfgFile n) = printResult $ runApp (scheduleNextEvents n) cfgFile
-run (ScheduleMonth cfgFile y m) = printResult $ runApp (scheduleEventsAt y m) cfgFile
+run (ScheduleNextMonths cfg n) = printResult $ runApp (scheduleNextEvents n) cfg
+run (ScheduleMonth cfg y m) = printResult $ runApp (scheduleEventsAt y m) cfg
 
 
 runApp :: App [SchedulingResult] -> FilePath -> ExceptT AppError IO [SchedulingResult]
-runApp app cfgFile = do
-  errOrCfg <- lift $ decodeFileEither cfgFile
-  either (throwE . InvalidConfig . show) (runReaderT app) errOrCfg
+runApp app cfg = do
+  errOrCfg <- lift $ decodeFileEither cfg
+  either (throwError . InvalidConfig . show) (runReaderT app) errOrCfg
 
 
 printResult :: ExceptT AppError IO [SchedulingResult] -> IO ()
@@ -44,7 +40,7 @@ printResult r = runExceptT r >>= putStrLn . formatAppRes
 
 
 printUsage :: IO ()
-printUsage = putStrLn $ unlines [
+printUsage = putStrLn $ (intercalate "\n") [
                "chaostreff-scheduler - schedule chaostreff events"
              , ""
              , "usage:"
@@ -68,6 +64,6 @@ printUsage = putStrLn $ unlines [
 
 handleInvalidArgs :: ParseError -> IO ()
 handleInvalidArgs e = do
-  putStrLn $ show e
+  putText $ show e
   putStrLn ""
   printUsage

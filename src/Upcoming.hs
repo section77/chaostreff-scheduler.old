@@ -10,7 +10,9 @@ module Upcoming (
 
 import           Data.Time
 import           Data.Time.Calendar.WeekDate
+import           Protolude
 import           Types
+import           Unsafe
 
 
 
@@ -50,9 +52,9 @@ allDaysAt y m = map toDay daysOfMonth
 --
 daysInMonth :: Month -> Int
 daysInMonth n
-    | n <= 1    = head days
-    | n >= 12   = last days
-    | otherwise = days !! (n - 1)
+    | n <= 1    = unsafeHead days
+    | n >= 12   = unsafeLast days
+    | otherwise = unsafeIndex days (n - 1)
     where days = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
 

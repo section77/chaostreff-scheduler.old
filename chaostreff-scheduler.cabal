@@ -1,65 +1,76 @@
+-- This file has been generated from package.yaml by hpack version 0.15.0.
+--
+-- see: https://github.com/sol/hpack
+
 name:                chaostreff-scheduler
 version:             0.2.0
-description:         Please see README.md
-homepage:            http://github.com/section77/chaostreff-scheduler
+description:         add chaostreff events in the cms calendar
+homepage:            https://github.com/section77/chaostreff-scheduler#readme
+bug-reports:         https://github.com/section77/chaostreff-scheduler/issues
 license:             MIT
 license-file:        LICENSE
-author:              j-keck
-maintainer:          jhyphenkeck@gmail.com
-category:            Web
+author:              j-keck <jhyphenkeck@gmail.com>
 build-type:          Simple
--- extra-source-files:
-cabal-version:       >=1.10
+cabal-version:       >= 1.10
+
+source-repository head
+  type: git
+  location: https://github.com/section77/chaostreff-scheduler
 
 library
-  hs-source-dirs:      src
-  exposed-modules:     Scheduling, Types, Utils, CMSCalendar, Upcoming
-  other-modules:       
-  build-depends:       base >= 4.7 && < 5
-                     , wreq
-                     , lens
-                     , bytestring
-                     , time
-                     , xml
-                     , text
-                     , yaml
-                     , transformers
-                       -- connection + http-client + http-client-tls to disable tls validation
-                     , connection
-                     , http-client
-                     , http-client-tls 
-  default-language:    Haskell2010
+  hs-source-dirs:
+      src
+  default-extensions: NoImplicitPrelude
+  ghc-options: -Wall -optl-static -optl-pthread
+  build-depends:
+      base >= 4.7 && < 5
+    , bytestring
+    , formatting
+    , lens
+    , protolude
+    , time
+    , transformers
+    , wreq-stringless
+    , yaml
+    , xml
+    , connection
+    , http-client
+    , http-client-tls
+  exposed-modules:
+      CMSCalendar
+      Scheduling
+      Types
+      Upcoming
+      Utils
+  default-language: Haskell2010
 
 executable chaostreff-scheduler
-  hs-source-dirs:      app
-  main-is:             Main.hs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base
-                     , chaostreff-scheduler
-                     , transformers
-                     , parsec
-                     , yaml
-  default-language:    Haskell2010
-
-test-suite chaostreff-scheduler-test
-  type:                exitcode-stdio-1.0
-  hs-source-dirs:      test
-  main-is:             Spec.hs
-  build-depends:       base
-                     , chaostreff-scheduler
-                     , doctest
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  default-language:    Haskell2010
+  hs-source-dirs:
+      app
+  default-extensions: NoImplicitPrelude
+  main-is: Main.hs
+  ghc-options: -Wall -optl-static -optl-pthread
+  build-depends:
+      base >= 4.7 && < 5
+    , chaostreff-scheduler
+    , optparse-applicative
+    , parsec
+    , yaml
+    , protolude
+  other-modules:
+      Args
+  default-language: Haskell2010
 
 test-suite doctest
-  type:                exitcode-stdio-1.0
-  hs-source-dirs:      test
-  main-is:             doctest.hs
-  build-depends:       base
-                     , chaostreff-scheduler
-                     , doctest
-  default-language:    Haskell2010
-                     
-source-repository head
-  type:     git
-  location: https://github.com/section77/chaostreff-scheduler
+  type: exitcode-stdio-1.0
+  hs-source-dirs:
+      test
+  default-extensions: NoImplicitPrelude
+  ghc-options: -Wall -optl-static -optl-pthread
+  main-is: doctest.hs
+  build-depends:
+      doctest
+    , protolude
+  other-modules:
+      Spec
+  default-language: Haskell2010

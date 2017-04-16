@@ -12,10 +12,8 @@ module Scheduling (
 ) where
 
 import           CMSCalendar
-import           Control.Monad.Trans.Class  (lift)
-import           Control.Monad.Trans.Reader (asks)
 import           Data.Time
-import           Data.Time.Calendar         (addGregorianMonthsClip)
+import           Protolude
 import           Types
 import           Upcoming
 

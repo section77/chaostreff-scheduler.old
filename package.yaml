@@ -1,0 +1,47 @@
+name: chaostreff-scheduler
+version: 0.2.1
+description: schedule events in the cms calendar
+github: section77/chaostreff-scheduler
+license: MIT
+author: j-keck <jhyphenkeck@gmail.com>
+
+ghc-options: -Wall -optl-static -optl-pthread
+default-extensions: NoImplicitPrelude
+
+
+library:
+  source-dirs: src
+  dependencies:
+    - base >= 4.7 && < 5
+    - bytestring
+    - formatting
+    - lens
+    - protolude
+    - time
+    - transformers
+    - wreq-stringless
+    - yaml
+    - xml
+    - connection
+    - http-client
+    - http-client-tls
+
+executables:
+  chaostreff-scheduler:
+    main: Main.hs
+    source-dirs: app
+    dependencies:
+      - base >= 4.7 && < 5
+      - chaostreff-scheduler
+      - optparse-applicative
+      - parsec
+      - yaml
+      - protolude
+
+tests:
+  doctest:
+    main: doctest.hs
+    source-dirs: test
+    dependencies:
+      - doctest
+      - protolude
