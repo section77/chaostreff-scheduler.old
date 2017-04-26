@@ -20,11 +20,11 @@ import           Unsafe
 
 -- | upcoming events in a given year and month
 --
--- >>> upcomingAt 2016 01
--- [2016-01-13,2016-01-27]
+-- >>> upcomingAt 2017 05
+-- [2017-05-02,2017-05-16,2017-05-30]
 upcomingAt :: Year -> Month -> [Day]
 upcomingAt y m = oddElements tuesdays
-    where oddElements = map snd . filter (even . fst) . zip [1..]
+    where oddElements = map snd . filter (odd . fst) . zip [1..]
           tuesdays = filter isTuesday $ allDaysAt y m
 
 

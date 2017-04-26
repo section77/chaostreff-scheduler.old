@@ -51,8 +51,8 @@ schedule chaostreff events in the cms calendar
           title: Chaostreff
           time: 20:00:00
           type: Chaostreff im Hackspace
-          desc: Dienstagstreffen des Vereins im Hackspace (wie jeden 2. und 4. Dienstags des Monats)
           url: http://osm.org/go/0DLdIKvND?way=286246667
+          desc: Dienstagstreffen des Vereins im Hackspace (wie jeden 1. und 3. (manchmal auch 5.) Dienstag des Monats)
           calendar-title: Chaostreff
 
         # login for cms (to update the calendar)
